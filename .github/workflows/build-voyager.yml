@@ -50,6 +50,7 @@ jobs:
       - name: Compile firmware
         working-directory: qmk_firmware
         run: |
+          qmk clean -a
           qmk compile \
             -kb zsa/voyager \
             -km dev_es
