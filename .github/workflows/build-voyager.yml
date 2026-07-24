@@ -95,7 +95,7 @@ jobs:
 
           source = source.replace(
               marker,
-              marker + "\\n" + declarations,
+              marker + "\n" + declarations,
               1,
           )
 
