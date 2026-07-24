@@ -1,0 +1,52 @@
+name: Build Voyager Dev-ES firmware
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "keymap/**"
+      - ".github/workflows/build-voyager.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: ghcr.io/qmk/qmk_cli:latest
+
+    steps:
+      - name: Allow Git operations in the build container
+        run: git config --global --add safe.directory "*"
+
+      - name: Check out this keymap
+        uses: actions/checkout@v4
+        with:
+          path: userspace
+
+      - name: Check out ZSA QMK
+        uses: actions/checkout@v4
+        with:
+          repository: zsa/qmk_firmware
+          ref: firmware25
+          submodules: recursive
+          path: qmk_firmware
+
+      - name: Install the keymap
+        run: |
+          rm -rf qmk_firmware/keyboards/voyager/keymaps/dev_es
+          cp -R userspace/keymap qmk_firmware/keyboards/voyager/keymaps/dev_es
+
+      - name: Compile
+        working-directory: qmk_firmware
+        run: qmk compile -kb voyager -km dev_es
+
+      - name: Upload flashable firmware
+        uses: actions/upload-artifact@v4
+        with:
+          name: voyager-dev-es-firmware
+          path: |
+            qmk_firmware/*.bin
+            qmk_firmware/*.hex
+            qmk_firmware/*.uf2
+          if-no-files-found: error
