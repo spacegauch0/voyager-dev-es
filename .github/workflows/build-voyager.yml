@@ -13,40 +13,46 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container: ghcr.io/qmk/qmk_cli:latest
 
     steps:
-      - name: Allow Git operations in the build container
-        run: git config --global --add safe.directory "*"
-
-      - name: Check out this keymap
+      - name: Checkout keymap repository
         uses: actions/checkout@v4
-        with:
-          path: userspace
 
-      - name: Check out ZSA QMK
+      - name: Checkout ZSA QMK
         uses: actions/checkout@v4
         with:
           repository: zsa/qmk_firmware
           ref: firmware25
-          submodules: recursive
           path: qmk_firmware
+          submodules: recursive
+
+      - name: Install dependencies
+        run: |
+          python3 -m pip install --user qmk
+          qmk setup -y
 
       - name: Install the keymap
         run: |
-          rm -rf qmk_firmware/keyboards/voyager/keymaps/dev_es
-          cp -R userspace/keymap qmk_firmware/keyboards/voyager/keymaps/dev_es
+          rm -rf qmk_firmware/keyboards/zsa/voyager/keymaps/dev_es
+          mkdir -p qmk_firmware/keyboards/zsa/voyager/keymaps
+          cp -R userspace/keymap qmk_firmware/keyboards/zsa/voyager/keymaps/dev_es
 
-      - name: Compile
+      - name: Compile firmware
         working-directory: qmk_firmware
-        run: qmk compile -kb voyager -km dev_es
+        run: qmk compile -kb zsa/voyager -km dev_es
 
-      - name: Upload flashable firmware
+      - name: Collect firmware
+        run: |
+          mkdir -p artifact
+          find qmk_firmware \
+            -maxdepth 1 \
+            -type f \
+            \( -name '*.bin' -o -name '*.hex' -o -name '*.uf2' \) \
+            -exec cp {} artifact/ \;
+
+      - name: Upload firmware
         uses: actions/upload-artifact@v4
         with:
           name: voyager-dev-es-firmware
-          path: |
-            qmk_firmware/*.bin
-            qmk_firmware/*.hex
-            qmk_firmware/*.uf2
+          path: artifact/
           if-no-files-found: error
