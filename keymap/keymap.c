@@ -59,7 +59,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         CW_TOGG, KC_F1,   KC_F2,   KC_F3,   KC_F4,   KC_F5,                         KC_F6,   KC_F7,   KC_F8,   KC_F9,   KC_F10,  KC_DEL,
         KC_ESC,  KC_Q,    KC_J,    KC_Y,    KC_COMM, KC_DOT,                        KC_B,    KC_H,    KC_D,    KC_M,    KC_P,    KC_BSLS,
         OSL(SPANISH), KC_A, HM_E,  HM_O,    HM_I,    KC_U,                          KC_N,    HM_S,    HM_T,    HM_R,    KC_L,    KC_QUOT,
-        OS_HYPR, KC_Z,    KC_X,    KC_C,    KC_G,    KC_MINS,                       KC_K,    KC_W,    KC_F,    KC_V,    KC_SLSH, KC_ENT,
+        OSM(MOD_HYPR), KC_Z, KC_X,    KC_C,    KC_G,    KC_MINS,                    KC_K,    KC_W,    KC_F,    KC_V,    KC_SLSH, KC_ENT,
                                                     TH_NUM, TH_NAV,         TH_SFT, TH_CODE
     ),
 
