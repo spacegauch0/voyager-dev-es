@@ -39,7 +39,8 @@ jobs:
           sudo apt-get install -y \
             gcc-arm-none-eabi \
             binutils-arm-none-eabi \
-            libnewlib-arm-none-eabi
+            libnewlib-arm-none-eabi \
+            dfu-util
 
       - name: Verify build tools
         run: |
