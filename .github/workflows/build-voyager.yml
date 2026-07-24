@@ -7,9 +7,6 @@ on:
       - "keymap/**"
       - ".github/workflows/build-voyager.yml"
 
-permissions:
-  contents: read
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -26,16 +23,14 @@ jobs:
           path: qmk_firmware
           submodules: recursive
 
-      - name: Install dependencies
-        run: |
-          python3 -m pip install --user qmk
-          qmk setup -y
+      - name: Install QMK CLI
+        run: python3 -m pip install --user qmk
 
       - name: Install the keymap
         run: |
           rm -rf qmk_firmware/keyboards/zsa/voyager/keymaps/dev_es
-          mkdir -p qmk_firmware/keyboards/zsa/voyager/keymaps
-          cp -R userspace/keymap qmk_firmware/keyboards/zsa/voyager/keymaps/dev_es
+          mkdir -p qmk_firmware/keyboards/zsa/voyager/keymaps/dev_es
+          cp -R keymap/. qmk_firmware/keyboards/zsa/voyager/keymaps/dev_es/
 
       - name: Compile firmware
         working-directory: qmk_firmware
