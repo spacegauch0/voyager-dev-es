@@ -15,7 +15,7 @@ jobs:
       - name: Checkout keymap repository
         uses: actions/checkout@v4
 
-      - name: Checkout ZSA QMK
+      - name: Checkout ZSA QMK firmware
         uses: actions/checkout@v4
         with:
           repository: zsa/qmk_firmware
@@ -24,9 +24,24 @@ jobs:
           submodules: recursive
 
       - name: Install QMK CLI
-        run: python3 -m pip install --user qmk
+        run: |
+          python3 -m pip install --user qmk
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
-      - name: Install the keymap
+      - name: Install ARM toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            gcc-arm-none-eabi \
+            binutils-arm-none-eabi \
+            libnewlib-arm-none-eabi
+
+      - name: Verify build tools
+        run: |
+          qmk --version
+          arm-none-eabi-gcc --version
+
+      - name: Install keymap
         run: |
           rm -rf qmk_firmware/keyboards/zsa/voyager/keymaps/dev_es
           mkdir -p qmk_firmware/keyboards/zsa/voyager/keymaps/dev_es
@@ -34,20 +49,32 @@ jobs:
 
       - name: Compile firmware
         working-directory: qmk_firmware
-        run: qmk compile -kb zsa/voyager -km dev_es
+        run: |
+          qmk compile \
+            -kb zsa/voyager \
+            -km dev_es
 
       - name: Collect firmware
         run: |
           mkdir -p artifact
+
           find qmk_firmware \
             -maxdepth 1 \
             -type f \
-            \( -name '*.bin' -o -name '*.hex' -o -name '*.uf2' \) \
+            \( \
+              -name 'zsa_voyager_dev_es.bin' \
+              -o -name 'zsa_voyager_dev_es.hex' \
+              -o -name 'zsa_voyager_dev_es.uf2' \
+            \) \
             -exec cp {} artifact/ \;
 
-      - name: Upload firmware
+          echo "Generated firmware:"
+          find artifact -maxdepth 1 -type f -print
+
+      - name: Upload firmware artifact
         uses: actions/upload-artifact@v4
         with:
           name: voyager-dev-es-firmware
           path: artifact/
           if-no-files-found: error
+          retention-days: 30
