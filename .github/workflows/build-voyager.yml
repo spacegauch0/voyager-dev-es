@@ -7,9 +7,14 @@ on:
       - "keymap/**"
       - ".github/workflows/build-voyager.yml"
 
+permissions:
+  contents: read
+
 jobs:
   build:
+    name: Compile ZSA Voyager firmware
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - name: Checkout keymap repository
@@ -41,16 +46,29 @@ jobs:
           qmk --version
           arm-none-eabi-gcc --version
 
+      - name: Validate keymap files
+        run: |
+          test -f keymap/keymap.c
+          test -f keymap/config.h
+          test -f keymap/rules.mk
+
+          echo "Keymap files:"
+          find keymap -maxdepth 1 -type f -print
+
       - name: Install keymap
         run: |
-          rm -rf qmk_firmware/keyboards/zsa/voyager/keymaps/dev_es
-          mkdir -p qmk_firmware/keyboards/zsa/voyager/keymaps/dev_es
-          cp -R keymap/. qmk_firmware/keyboards/zsa/voyager/keymaps/dev_es/
+          KEYMAP_DEST="qmk_firmware/keyboards/zsa/voyager/keymaps/dev_es"
+
+          rm -rf "$KEYMAP_DEST"
+          mkdir -p "$KEYMAP_DEST"
+          cp -R keymap/. "$KEYMAP_DEST/"
+
+          echo "Installed keymap:"
+          find "$KEYMAP_DEST" -maxdepth 1 -type f -print
 
       - name: Compile firmware
         working-directory: qmk_firmware
         run: |
-          qmk clean -a
           qmk compile \
             -kb zsa/voyager \
             -km dev_es
@@ -63,13 +81,13 @@ jobs:
             -maxdepth 1 \
             -type f \
             \( \
-              -name 'zsa_voyager_dev_es.bin' \
-              -o -name 'zsa_voyager_dev_es.hex' \
-              -o -name 'zsa_voyager_dev_es.uf2' \
+              -name "zsa_voyager_dev_es.bin" \
+              -o -name "zsa_voyager_dev_es.hex" \
+              -o -name "zsa_voyager_dev_es.uf2" \
             \) \
             -exec cp {} artifact/ \;
 
-          echo "Generated firmware:"
+          echo "Generated firmware files:"
           find artifact -maxdepth 1 -type f -print
 
       - name: Upload firmware artifact
