@@ -66,6 +66,46 @@ jobs:
           echo "Installed keymap:"
           find "$KEYMAP_DEST" -maxdepth 1 -type f -print
 
+      - name: Patch missing Voyager keycodes
+        run: |
+          VOYAGER_HEADER="qmk_firmware/keyboards/zsa/voyager/voyager.h"
+
+          if ! grep -q "TOGGLE_LAYER_COLOR" "$VOYAGER_HEADER"; then
+            python3 <<'PY'
+          from pathlib import Path
+
+          path = Path("qmk_firmware/keyboards/zsa/voyager/voyager.h")
+          source = path.read_text()
+
+          marker = '#include "quantum.h"'
+
+          declarations = '''
+          /*
+           * Compatibility declarations for standalone firmware25 builds.
+           * voyager.c references these keyboard-level keycodes.
+           */
+          enum voyager_keycodes {
+              TOGGLE_LAYER_COLOR = QK_KB,
+              LED_LEVEL,
+          };
+          '''
+
+          if marker not in source:
+              raise SystemExit(f"Could not find insertion marker in {path}")
+
+          source = source.replace(
+              marker,
+              marker + "\\n" + declarations,
+              1,
+          )
+
+          path.write_text(source)
+          PY
+          fi
+
+          echo "Voyager keycode declarations:"
+          grep -n -A5 -B2 "enum voyager_keycodes" "$VOYAGER_HEADER"
+
       - name: Compile firmware
         working-directory: qmk_firmware
         run: |
